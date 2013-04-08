@@ -11,7 +11,7 @@
  * Dual licensed under the MIT or GPL licenses.
  * http://appendto.com/open-source-licenses
  */
-(function($) {
+(function($, undefined) {
 	var _ajax = $.ajax,
 		mockHandlers = [],
 		CALLBACK_REGEX = /=\?(&|$)/, 
@@ -57,26 +57,25 @@
 	// can be used to restrict a mock handler to being used only when a certain
 	// set of data is passed to it.
 	function isMockDataEqual( mock, live ) {
-		var identical = false;
+		var identical = true;
 		// Test for situations where the data is a querystring (not an object)
 		if (typeof live === 'string') {
 			// Querystring may be a regex
-			return $.isFunction( mock.test ) ? mock.test(live) : mock == live;
+			return $.isFunction( mock.test ) ? mock.test(live) : mock === live;
 		}
 		$.each(mock, function(k, v) {
-			if ( live[k] === undefined ) {
+			var liveValue = live[k];
+			
+			if ( liveValue === undefined ) {
 				identical = false;
 				return identical;
 			} else {
-				identical = true;
-				if ( typeof live[k] == 'object' ) {
-					return isMockDataEqual(mock[k], live[k]);
+				if ( typeof liveValue == 'object' ) {
+					return identical = isMockDataEqual(v, liveValue);
 				} else {
-					if ( $.isFunction( mock[k].test ) ) {
-						identical = mock[k].test(live[k]);
-					} else {
-						identical = ( mock[k] == live[k] );
-					}
+					identical = $.isFunction( v.test )
+						? v.test(liveValue)
+						: v == liveValue;
 					return identical;
 				}
 			}
